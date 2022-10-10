@@ -6,6 +6,8 @@ import progressbar
 import dns.resolver
 import socket
 
+from dns.rdatatype import CNAME
+
 
 def enumerateDomain(domain, nameservers):
     widgets = [' [',
@@ -33,10 +35,16 @@ def enumerateDomain(domain, nameservers):
         possibility = ''.join(ch for ch in possibility if ch.isalnum())
         hostname = possibility + '.' + domain
         try:
+            # First try to get A records
             resolver.resolve(hostname)
             hostnames.append(hostname)
-        except:
-            pass
+        except Exception as e:
+            # If no A record, try CNAME record
+            try:
+                resolver.resolve(hostname, CNAME)
+                hostnames.append(hostname)
+            except Exception as e:
+                pass
         counter = counter + 1
         bar.update(counter)
     return hostnames
